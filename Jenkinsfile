@@ -4,46 +4,59 @@ pipeline {
     environment {
         DOCKERHUB_CREDENTIALS = credentials('dockerhub-creds')
         IMAGE_NAME = "bluedio/boot-login-app"
-        IMAGE_TAG = "${BUILD_NUMBER}"
+        IMAGE_TAG = "v${env.BUILD_NUMBER}"
     }
 
     stages {
         stage('Checkout Code') {
             steps {
-                git branch: 'main', url: 'https://github.com/bue-dio/springboot-microservice.git'
+                git branch: 'main',
+                    url: 'https://github.com/bue-dio/springboot-microservice.git'
             }
         }
 
-        stage('Build Maven Project') {
+        stage('Build with Maven') {
             steps {
+                echo "🧱 Building the application with Maven..."
                 sh 'mvn clean package -DskipTests'
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
+                echo "🐳 Building Docker image..."
+                sh 'docker build -t $IMAGE_NAME:$IMAGE_TAG .'
             }
         }
 
-        stage('Push to Docker Hub') {
+        stage('Push Docker Image to Docker Hub') {
             steps {
-                sh """
-                    echo ${DOCKERHUB_CREDENTIALS_PSW} | docker login -u ${DOCKERHUB_CREDENTIALS_USR} --password-stdin
-                    docker push ${IMAGE_NAME}:${IMAGE_TAG}
-                    docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${IMAGE_NAME}:latest
-                    docker push ${IMAGE_NAME}:latest
-                """
+                echo "🚀 Pushing image to Docker Hub..."
+                sh '''
+                    echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin
+                    docker push $IMAGE_NAME:$IMAGE_TAG
+                '''
+            }
+        }
+
+        stage('Deploy to Kubernetes') {
+            steps {
+                echo "☸️ Deploying app to Kubernetes cluster..."
+                sh '''
+                    kubectl set image deployment/springboot-microservice-deployment \
+                    springboot-microservice=$IMAGE_NAME:$IMAGE_TAG --record || \
+                    kubectl apply -f k8s/
+                '''
             }
         }
     }
 
     post {
         success {
-            echo "✅ Successfully built and pushed ${IMAGE_NAME}:${IMAGE_TAG} and :latest to Docker Hub!"
+            echo "✅ Deployment successful! App deployed with image tag: $IMAGE_TAG"
         }
         failure {
-            echo "❌ Build failed. Check Jenkins console for details."
+            echo "❌ Build or deployment failed. Check Jenkins logs for details."
         }
     }
 }
