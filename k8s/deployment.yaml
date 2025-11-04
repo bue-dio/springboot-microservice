@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: springboot-microservice-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: springboot-microservice
+  template:
+    metadata:
+      labels:
+        app: springboot-microservice
+    spec:
+      containers:
+        - name: springboot-microservice
+          image: <YOUR_REGISTRY>/springboot-microservice:<TAG>
+          ports:
+            - containerPort: 8080
