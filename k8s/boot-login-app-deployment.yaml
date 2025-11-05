@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boot-login-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: boot-login-app
+  template:
+    metadata:
+      labels:
+        app: boot-login-app
+    spec:
+      containers:
+        - name: boot-login-app
+          image: bluedio/boot-login-app:v1.0.9
+          ports:
+            - containerPort: 8080
+          env:
+            - name: DB_HOST
+              value: "postgres-service"
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_NAME
+              value: "mydb"
+            - name: DB_USERNAME
+              value: "postgres"
+            - name: DB_PASSWORD
+              value: "postgres"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: boot-login-service
+spec:
+  type: NodePort
+  ports:
+    - port: 8080
+      targetPort: 8080
+      nodePort: 30080
+  selector:
+    app: boot-login-app
