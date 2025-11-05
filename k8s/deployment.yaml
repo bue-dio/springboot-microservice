@@ -1,11 +1,9 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: boot-login-app-deployment
-  labels:
-    app: boot-login-app
+  name: boot-login-app
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: boot-login-app
@@ -16,7 +14,17 @@ spec:
     spec:
       containers:
         - name: boot-login-app
-          image: bluedio/boot-login-app:latest
+          image: bluedio/boot-login-app:v1.0.1
           ports:
             - containerPort: 8080
-          imagePullPolicy: Always
+          env:
+            - name: DB_HOST
+              value: "dpg-d44fudadbo4c73et8vi0-a.oregon-postgres.render.com"
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_NAME
+              value: "mydb_5moa"
+            - name: DB_USERNAME
+              value: "mydb_5moa_user"
+            - name: DB_PASSWORD
+              value: "mJ4N0sXGa0e4A6ynkqHMOoBGu5vHFTTW"
